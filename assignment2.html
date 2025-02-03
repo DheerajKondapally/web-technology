@@ -1,0 +1,91 @@
+<!-- Weather Dashboard -->
+<!DOCTYPE html>
+<html lang="en" ng-app="weatherApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background: url("https://res.cloudinary.com/dnmczwnwp/image/upload/v1721200531/cld-sample-2.jpg") no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+        }
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            animation: fadeIn 1.5s;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            width: 80%;
+            border-radius: 5px;
+            border: none;
+        }
+        button {
+            background: #ff9800;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #e68900;
+        }
+        .weather-container {
+            margin-top: 20px;
+            animation: slideIn 1s;
+        }
+        .error { color: red; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body ng-controller="WeatherController">
+    <div class="container">
+        <h1>Weather Dashboard</h1>
+        <input type="text" ng-model="city" placeholder="Enter city in India">
+        <button ng-click="getWeather()">Get Weather</button>
+        <div class="weather-container" ng-if="weather">
+            <h2>{{ weather.location.name }}, {{ weather.location.region }}</h2>
+            <p>Temperature: {{ weather.current.temp_c }} &#8451;</p>
+            <p>Humidity: {{ weather.current.humidity }}%</p>
+            <p>Conditions: {{ weather.current.condition.text }}</p>
+        </div>
+        <p class="error" ng-if="error">{{ error }}</p>
+        <p>Powered by <a href="https://www.weatherapi.com/" target="_blank" style="color: #ff9800;">WeatherAPI</a></p>
+    </div>
+    
+    <script>
+        var app = angular.module('weatherApp', []);
+        app.controller('WeatherController', function($scope, $http) {
+            $scope.getWeather = function() {
+                var apiKey = '9d9aaf8d805f4ba2b95101006250302';
+                var url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${$scope.city},India`;
+                
+                $http.get(url).then(function(response) {
+                    $scope.weather = response.data;
+                    $scope.error = '';
+                }, function(error) {
+                    $scope.weather = null;
+                    $scope.error = 'City not found or API error';
+                });
+            };
+        });
+    </script>
+</body>
+</html>
