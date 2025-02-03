@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Finance Tracker</title>
+  <script src="https://code.angularjs.org/1.8.2/angular.min.js"></script>
+  <script src="https://code.angularjs.org/1.8.2/angular-route.min.js"></script>
+  <style>
+    /* Global Styles */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    nav {
+      background-color: #333;
+      color: #fff;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-around;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 18px;
+      padding: 10px 15px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    nav a:hover {
+      background-color: #555;
+    }
+    nav a.active {
+      background-color: #007bff;
+    }
+
+    /* Container for content */
+    .container {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    /* Form Styles */
+    form {
+      margin-bottom: 20px;
+    }
+    form input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    form button {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    form button:hover {
+      background-color: #218838;
+    }
+
+    /* Section Titles */
+    h2 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* Expense/Income List */
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 10px;
+      background-color: #f9f9f9;
+      margin: 5px 0;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    li a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    li a:hover {
+      text-decoration: underline;
+    }
+
+    /* Dashboard Stats */
+    .dashboard-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 30px;
+    }
+    .stat-box {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      width: 30%;
+      text-align: center;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+    .stat-box h3 {
+      margin: 0;
+      font-size: 24px;
+      color: #333;
+    }
+    .stat-box p {
+      margin: 5px 0 0;
+      font-size: 18px;
+      color: #777;
+    }
+  </style>
+</head>
+<body ng-app="financeTracker">
+
+  <!-- Navigation -->
+  <nav>
+    <a href="#/dashboard" ng-class="{'active': isActive('/dashboard')}">Dashboard</a>
+    <a href="#/expenses" ng-class="{'active': isActive('/expenses')}">Expenses</a>
+    <a href="#/income" ng-class="{'active': isActive('/income')}">Income</a>
+  </nav>
+
+  <!-- Main View -->
+  <div ng-view></div>
+
+  <script>
+    var app = angular.module('financeTracker', ['ngRoute']);
+
+    app.config(function($routeProvider) {
+      $routeProvider
+        .when('/dashboard', {
+          templateUrl: 'dashboard.html',
+          controller: 'DashboardController'
+        })
+        .when('/expenses', {
+          templateUrl: 'expenses.html',
+          controller: 'ExpensesController'
+        })
+        .when('/income', {
+          templateUrl: 'income.html',
+          controller: 'IncomeController'
+        })
+        .when('/expenses/:id', {
+          templateUrl: 'expenses.html',
+          controller: 'EditExpenseController'
+        })
+        .when('/income/:id', {
+          templateUrl: 'income.html',
+          controller: 'EditIncomeController'
+        })
+        .otherwise({
+          redirectTo: '/dashboard'
+        });
+    });
+
+    app.controller('DashboardController', function($scope, FinanceService) {
+      $scope.totalIncome = FinanceService.getTotalIncome();
+      $scope.totalExpenses = FinanceService.getTotalExpenses();
+      $scope.balance = $scope.totalIncome - $scope.totalExpenses;
+    });
+
+    app.controller('ExpensesController', function($scope, FinanceService) {
+      $scope.expenses = FinanceService.getExpenses();
+      $scope.expense = {};
+
+      $scope.addExpense = function() {
+        FinanceService.addExpense($scope.expense);
+        $scope.expense = {}; // Reset form
+      };
+    });
+
+    app.controller('IncomeController', function($scope, FinanceService) {
+      $scope.incomeList = FinanceService.getIncome();
+      $scope.income = {};
+
+      $scope.addIncome = function() {
+        FinanceService.addIncome($scope.income);
+        $scope.income = {}; // Reset form
+      };
+    });
+
+    app.controller('EditExpenseController', function($scope, $routeParams, FinanceService) {
+      var expenseId = $routeParams.id;
+      $scope.expense = FinanceService.getExpenseById(expenseId);
+
+      $scope.updateExpense = function() {
+        FinanceService.updateExpense($scope.expense);
+      };
+    });
+
+    app.controller('EditIncomeController', function($scope, $routeParams, FinanceService) {
+      var incomeId = $routeParams.id;
+      $scope.income = FinanceService.getIncomeById(incomeId);
+
+      $scope.updateIncome = function() {
+        FinanceService.updateIncome($scope.income);
+      };
+    });
+
+    app.factory('FinanceService', function() {
+      var expenses = [];
+      var incomeList = [];
+
+      return {
+        getTotalIncome: function() {
+          return incomeList.reduce(function(total, inc) {
+            return total + inc.amount;
+          }, 0);
+        },
+        getTotalExpenses: function() {
+          return expenses.reduce(function(total, exp) {
+            return total + exp.amount;
+          }, 0);
+        },
+        getExpenses: function() {
+          return expenses;
+        },
+        addExpense: function(expense) {
+          expense.id = Date.now();
+          expenses.push(expense);
+        },
+        getIncome: function() {
+          return incomeList;
+        },
+        addIncome: function(income) {
+          income.id = Date.now();
+          incomeList.push(income);
+        },
+        getExpenseById: function(id) {
+          return expenses.find(function(exp) {
+            return exp.id === parseInt(id);
+          });
+        },
+        updateExpense: function(updatedExpense) {
+          for (var i = 0; i < expenses.length; i++) {
+            if (expenses[i].id === updatedExpense.id) {
+              expenses[i] = updatedExpense;
+              break;
+            }
+          }
+        },
+        getIncomeById: function(id) {
+          return incomeList.find(function(inc) {
+            return inc.id === parseInt(id);
+          });
+        },
+        updateIncome: function(updatedIncome) {
+          for (var i = 0; i < incomeList.length; i++) {
+            if (incomeList[i].id === updatedIncome.id) {
+              incomeList[i] = updatedIncome;
+              break;
+            }
+          }
+        }
+      };
+    });
+
+    app.controller('NavController', function($scope, $location) {
+      $scope.isActive = function(route) {
+        return $location.path() === route;
+      };
+    });
+  </script>
+
+  <!-- Templates (embedded in HTML) -->
+  <script type="text/ng-template" id="dashboard.html">
+    <div class="container">
+      <h2>Dashboard</h2>
+      <div class="dashboard-stats">
+        <div class="stat-box">
+          <h3>Total Income</h3>
+          <p>${{ totalIncome }}</p>
+        </div>
+        <div class="stat-box">
+          <h3>Total Expenses</h3>
+          <p>${{ totalExpenses }}</p>
+        </div>
+        <div class="stat-box">
+          <h3>Balance</h3>
+          <p>${{ balance }}</p>
+        </div>
+      </div>
+    </div>
+  </script>
+
+  <script type="text/ng-template" id="expenses.html">
+    <div class="container">
+      <h2>Expenses</h2>
+      <form ng-submit="addExpense()">
+        <input type="text" ng-model="expense.name" placeholder="Expense Name" required>
+        <input type="number" ng-model="expense.amount" placeholder="Amount" required>
+        <button type="submit">Add Expense</button>
+      </form>
+
+      <h3>Expense List</h3>
+      <ul>
+        <li ng-repeat="exp in expenses">
+          {{ exp.name }} - ${{ exp.amount }} 
+          <a href="#/expenses/{{ exp.id }}">Edit</a>
+        </li>
+      </ul>
+    </div>
+  </script>
+
+  <script type="text/ng-template" id="income.html">
+    <div class="container">
+      <h2>Income</h2>
+      <form ng-submit="addIncome()">
+        <input type="text" ng-model="income.source" placeholder="Income Source" required>
+        <input type="number" ng-model="income.amount" placeholder="Amount" required>
+        <button type="submit">Add Income</button>
+      </form>
+
+      <h3>Income List</h3>
+      <ul>
+        <li ng-repeat="inc in incomeList">
+          {{ inc.source }} - ${{ inc.amount }}
+          <a href="#/income/{{ inc.id }}">Edit</a>
+        </li>
+      </ul>
+    </div>
+  </script>
+
+</body>
+</html>
